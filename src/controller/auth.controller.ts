@@ -8,6 +8,7 @@ import { AuthService } from '../service/auth.service';
 import { config } from 'dotenv';
 import { UserService } from '../service/user.service';
 import {IUser} from '../interfaces/IUser';
+import {nodeEnv, oneYearInMs} from '../configs/app.conf';
 config(); // load data from .env
 
 /**
@@ -53,11 +54,14 @@ export class AuthController {
         try {
             const tokens: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
             const user: IUser = await this.userService.doGetUserOfEmail(email);
-            /* res.cookie('tokens', tokens, {
+
+            res.cookie('tokens', JSON.stringify(tokens), {
                 expires: new Date(Date.now() + oneYearInMs),
-                secure: (nodeEnv === 'production') ? true : false,
                 httpOnly: true,
-              }); */
+                secure: (nodeEnv !== 'development'),
+            });
+
+            // TODO: remove this response because of implementing httpOnly cookie authentication
             res.status(200).json({
                 tokens,
                 user: {
