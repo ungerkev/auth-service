@@ -36,7 +36,6 @@ export class AuthService {
      * login a user and send to the client accesToken and refreshToken + save refreshToken in DB
      * check if passwords are equal and then login a user
      * @param email string
-     * @param username string
      * @param password string
      * @returns
      */
@@ -50,13 +49,13 @@ export class AuthService {
             throw new Error('User not found');
         }
 
-        await this.comparePasswords(password, foundUser.password);
+        await AuthService.comparePasswords(password, foundUser.password);
 
         const tokenPayload = {
             id: foundUser.id,
          };
-        const accessToken = this.generateAccessToken(tokenPayload);
-        const refreshToken = jwt.sign(tokenPayload, this.getRefreshTokenSecret());
+        const accessToken: string = AuthService.generateAccessToken(tokenPayload);
+        const refreshToken: string = jwt.sign(tokenPayload, AuthService.getRefreshTokenSecret());
 
         try {
             await this.userService.doSaveRefreshToken(foundUser.email, refreshToken);
@@ -70,28 +69,27 @@ export class AuthService {
         };
     }
 
+    /**
+     * check if user with particular token is a admin or not
+     * @param token string
+     */
     public async doCheckIsAdmin(token: string): Promise<boolean> {
-        const validUser = await this.doCheckToken(token);
+        const validUser: any = await this.doCheckToken(token);
         if (!validUser) {
             throw new HttpError('No valid user', 401);
         }
 
-        const decodedToken = await this.decodeToken(token);
-
+        const decodedToken: string = await this.decodeToken(token);
         if (!decodedToken) {
             throw new HttpError('Token could not be decoded', 401);
         }
 
-        const user = this.userService.doGetUserOfId(validUser.id);
+        const user: any = this.userService.doGetUserOfId(validUser.id);
         if (!user) {
             throw new HttpError('No user found', 401);
         }
 
-        if (user.isAdmin) {
-            return true;
-        }
-
-        return false;
+        return user.isAdmin;
     }
 
     /**
@@ -104,7 +102,7 @@ export class AuthService {
             throw new HttpError('Access Token is not set', 401);
         }
 
-        return jwt.verify(token, this.getAccessTokenSecret(), (err, user) => {
+        return jwt.verify(token, AuthService.getAccessTokenSecret(), (err, user) => {
             if (err) {
                 throw new HttpError('Token expired', 401);
             }
@@ -123,18 +121,18 @@ export class AuthService {
         }
 
         const decodedUser: any = this.decodeToken(refreshToken);
-        const storedRefreshToken = await this.userService.doGetRefreshToken(decodedUser.email);
+        const storedRefreshToken: string = await this.userService.doGetRefreshToken(decodedUser.email);
 
         if (storedRefreshToken !== refreshToken) {
             throw new HttpError('Refresh Token not equal', 401);
         }
 
-        return jwt.verify(storedRefreshToken, this.getRefreshTokenSecret(), async (error, user) => {
+        return jwt.verify(storedRefreshToken, AuthService.getRefreshTokenSecret(), async (error, user) => {
             if (error) {
                 throw new HttpError('Access denied', 401);
             }
 
-            return this.generateAccessToken({
+            return AuthService.generateAccessToken({
                 email: user?.email,
             });
         });
@@ -179,7 +177,7 @@ export class AuthService {
      * @param user any
      * @returns
      */
-    private generateAccessToken(user: any) {
+    private static generateAccessToken(user: any) {
         if (!process.env.ACCESS_TOKEN_SECRET) {
             throw new HttpError('No JWT Token Secret provided', 401);
         }
@@ -190,7 +188,7 @@ export class AuthService {
      * returns the refresh token secret from .env file if exists
      * @returns
      */
-     private getRefreshTokenSecret(): string {
+    private static getRefreshTokenSecret(): string {
         if (!process.env.REFRESH_TOKEN_SECRET) {
             throw new HttpError('No JWT Token Secret provided', 401);
         }
@@ -201,7 +199,7 @@ export class AuthService {
      * returns the access token secret from .env file if exists
      * @returns
      */
-     private getAccessTokenSecret(): string {
+    private static getAccessTokenSecret(): string {
         if (!process.env.ACCESS_TOKEN_SECRET) {
             throw new HttpError('No JWT Token Secret provided', 401);
         }
@@ -214,8 +212,8 @@ export class AuthService {
      * @param hashedPassword string
      * @returns
      */
-     private async comparePasswords(textPassword: string, hashedPassword: string): Promise<boolean> {
-        const isPasswordEqual = await bcrypt.compare(textPassword, hashedPassword);
+    private static async comparePasswords(textPassword: string, hashedPassword: string): Promise<boolean> {
+        const isPasswordEqual: boolean = await bcrypt.compare(textPassword, hashedPassword);
         if (!isPasswordEqual) {
             throw new HttpError('Passwords not equal', 400);
         }

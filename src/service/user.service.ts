@@ -3,6 +3,8 @@ import { config } from 'dotenv';
 import { HttpError } from '../errors/http.error';
 import { User } from '../db_models/User';
 import { Address } from '../db_models/Address';
+import {IUser} from '../interfaces/IUser';
+import {IAddress} from '../interfaces/IAddress';
 
 config(); // load data from .env
 
@@ -78,7 +80,7 @@ export class UserService {
             throw new HttpError('Missing Data', 400);
         }
 
-        const addresses = await this.doGetAllAddressesOfUserId(userId);
+        const addresses: { row: IAddress[], count: number} = await this.doGetAddressListOfUserId(userId);
         if (addresses?.count > 3) {
             throw new HttpError('Maximal 4 addresses can be saved', 500);
         }
@@ -90,12 +92,12 @@ export class UserService {
         });
     }
 
-    public doGetAllAddressesOfUserId(userId: number): any {
+    public doGetAddressListOfUserId(userId: number): any {
         if (!userId) {
             throw new HttpError('Missing Data', 400);
         }
 
-        const user = this.doGetUserOfId(userId);
+        const user: IUser = this.doGetUserOfId(userId);
         if (!user) {
             throw new HttpError('No user found', 500);
         }
@@ -120,7 +122,7 @@ export class UserService {
             throw new HttpError('Decoded token must be provided', 401);
         }
 
-        const user = await this.doGetUserOfId(decodedToken.id);
+        const user: IUser = await this.doGetUserOfId(decodedToken.id);
         if (!user) {
             throw new HttpError('No user found', 401);
         }

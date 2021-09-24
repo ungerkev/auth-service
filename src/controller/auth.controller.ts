@@ -7,6 +7,7 @@ import {
 import { AuthService } from '../service/auth.service';
 import { config } from 'dotenv';
 import { UserService } from '../service/user.service';
+import {IUser} from '../interfaces/IUser';
 config(); // load data from .env
 
 /**
@@ -26,11 +27,11 @@ export class AuthController {
      * @param next
      */
     register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const email = req.body.email || '';
-        const password = req.body.password || '';
+        const email: string = req.body.email || '';
+        const password: string = req.body.password || '';
 
         try {
-            const newUser = await this.authService.doRegister(email, password);
+            const newUser: IUser = await this.authService.doRegister(email, password);
             res.status(200).json({ newUser });
         } catch (e: any) {
             next(e);
@@ -46,12 +47,12 @@ export class AuthController {
      * @param next
      */
     login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const email = req.body.email || '';
-        const password = req.body.password || '';
+        const email: string = req.body.email || '';
+        const password: string = req.body.password || '';
 
         try {
-            const tokens = await this.authService.doLogin(email, password);
-            const user = await this.userService.doGetUserOfEmail(email);
+            const tokens: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
+            const user: IUser = await this.userService.doGetUserOfEmail(email);
             /* res.cookie('tokens', tokens, {
                 expires: new Date(Date.now() + oneYearInMs),
                 secure: (nodeEnv === 'production') ? true : false,
@@ -77,8 +78,8 @@ export class AuthController {
      * @param next
      */
     checkToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const authHeader = req.headers.authorization;
-        const token = authHeader?.split(' ')[1] || '';
+        const authHeader: string | undefined = req.headers.authorization;
+        const token: string = authHeader?.split(' ')[1] || '';
 
         try {
             await this.authService.doCheckToken(token);
@@ -96,9 +97,9 @@ export class AuthController {
      * @param next
      */
     refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const refreshToken = req.body.refreshToken;
+        const refreshToken: string = req.body.refreshToken;
         try {
-            const accessToken = await this.authService.doRefreshToken(refreshToken);
+            const accessToken: any = await this.authService.doRefreshToken(refreshToken);
             res.status(200).json({ accessToken });
         } catch (e: any) {
             res.status(e.code).send(e.message);
@@ -113,20 +114,26 @@ export class AuthController {
      * @param next
      */
     logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const email = req.body.email || '';
+        const email: string = req.body.email || '';
         try {
-            const loggedOut = await this.authService.doLogout(email);
+            const loggedOut: any = await this.authService.doLogout(email);
             res.status(200).json({ loggedOut });
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }
     }
 
+    /**
+     * check if user is admin
+     * @param req
+     * @param res
+     */
     checkIsAdmin = async (req: Request, res: Response): Promise<void> => {
-        const authHeader = req.headers.authorization;
-        const token = authHeader?.split(' ')[1] || '';
+        const authHeader: string | undefined = req.headers.authorization;
+        const token: string = authHeader?.split(' ')[1] || '';
         try {
-            const isAdmin = await this.authService.doCheckIsAdmin(token);
+            await this.authService.doCheckToken(token);
+            const isAdmin: boolean = await this.authService.doCheckIsAdmin(token);
             res.status(200).json(isAdmin);
         } catch (e: any) {
             res.status(e.code).send(e.message);

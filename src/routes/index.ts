@@ -32,7 +32,7 @@ router.post('/isAdmin', authController.checkIsAdmin);
  */
 router.put('/saveRefreshToken', userController.saveRefreshToken);
 router.post('/saveAddress', userController.saveAddress);
-router.get('/addresses/:userId', userController.getAllAddressesOfUserId);
+router.get('/addresses/:userId', userController.doGetAddressListOfUserId);
 router.get('/userId', userController.getIdOfToken);
 
 module.exports = router;
