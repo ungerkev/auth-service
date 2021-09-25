@@ -150,14 +150,14 @@ export class UserService {
         });
     }
 
-    public async doCheckIfUserIdExistInDb(decodedToken: any): Promise<boolean> {
-        if (!decodedToken) {
-            throw new HttpError('Decoded token must be provided', 401);
+    public async doCheckIfUserIdExistInDb(userId: number): Promise<boolean> {
+        if (!userId) {
+            throw new HttpError('User id must be provided', 400);
         }
 
-        const user: IUser = await this.doGetUserOfId(decodedToken.id);
+        const user: IUser = await this.doGetUserOfId(userId);
         if (!user) {
-            throw new HttpError('No user found', 401);
+            throw new HttpError('No user found', 400);
         }
 
         return true;

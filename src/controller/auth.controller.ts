@@ -11,7 +11,6 @@ import {IUser} from '../interfaces/IUser';
 import {nodeEnv, oneYearInMs} from '../configs/app.conf';
 import {IUserCookie} from '../interfaces/IUserCookie';
 import {Session, SessionData} from 'express-session';
-import * as jwt from 'jsonwebtoken';
 // import * as uuid from 'uuid';
 config(); // load data from .env
 
@@ -60,7 +59,7 @@ export class AuthController {
             }
 
             // TODO: remove this response because of implementing httpOnly cookie authentication
-            res.status(200).json({
+            res.status(200).send({
                 tokens: token,
                 user: {
                     firstName: user.firstName,
@@ -116,27 +115,22 @@ export class AuthController {
             const session:  Session & Partial<SessionData> = req.session;
 
             if (session.uuid && session.firstName && session.accessToken) {
-
                 const user: IUser = await this.userService.doGetUserOfUuid(session.uuid);
 
                 if (user.uuid === session.uuid && user.firstName === session.firstName && user.accessToken === session.accessToken) {
-
                     try {
-                        jwt.verify(user.accessToken, this.authService.getAccessTokenSecret());
+                        this.authService.verifyAccessToken(user.accessToken);
                         isAuthenticated = true;
-                        console.log('first access token VALID');
-                    } catch (err) {
-                        console.log('first access token INVALID');
+                    } catch (error: any) {
                         try {
-                            console.log('REFRESH first access token');
-                            jwt.verify(user.refreshToken, this.authService.getRefreshTokenSecret());
+                            // Handle refresh token
+                            this.authService.verifyRefreshToken(user.refreshToken);
                             const newAccessToken = this.authService.generateAccessToken();
-                            await this.userService.doSaveAccessToken('unger.kevin97@gmail.com', newAccessToken);
-                            isAuthenticated = true;
+                            await this.userService.doSaveAccessToken(user.email, newAccessToken);
                             req.session.accessToken = newAccessToken;
-                            console.log('SUCCESSFULL REFRESHED');
-                        } catch (error) {
-                            console.log('ERROR refresh token expired');
+                            isAuthenticated = true;
+                        } catch (error: any) {
+                            // Final error -> refresh token expired
                             isAuthenticated = false;
                             await this.authService.doLogout(user.id);
                             res.clearCookie('user_session');

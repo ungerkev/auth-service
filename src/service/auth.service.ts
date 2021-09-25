@@ -144,4 +144,33 @@ export class AuthService {
         }
         return isPasswordEqual;
     }
+
+
+
+
+
+
+
+    public verifyAccessToken(accessToken: string): void {
+        if (!process.env.ACCESS_TOKEN_SECRET) {
+            throw new HttpError('No JWT Token Secret provided', 401);
+        }
+        try {
+            jwt.verify(accessToken, this.getAccessTokenSecret());
+        } catch (err) {
+            throw new HttpError('Access token is not expired', 400);
+        }
+    }
+
+    public verifyRefreshToken(refreshToken: string): void {
+        if (!process.env.REFRESH_TOKEN_SECRET) {
+            throw new HttpError('No JWT Token Secret provided', 401);
+        }
+        try {
+            jwt.verify(refreshToken, this.getRefreshTokenSecret());
+        } catch (err) {
+            throw new HttpError('Refresh token is expired', 400);
+        }
+    }
+
 }

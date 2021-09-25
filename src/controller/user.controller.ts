@@ -4,16 +4,13 @@ import {
     Response,
 } from 'express';
 import { UserService } from '../service/user.service';
-import { AuthService } from '../service/auth.service';
-import {Session, SessionData} from 'express-session';
 
 /**
  * User Controller
  */
 @Service()
 export class UserController {
-    constructor(private userService: UserService,
-                private authService: AuthService) {}
+    constructor(private userService: UserService) {}
 
     /**
      * update user and save refresh token to the table
@@ -52,15 +49,13 @@ export class UserController {
 
     getId = async (req: Request, res: Response): Promise<void> => {
         try {
-            const session:  Session & Partial<SessionData> = req.session;
-
-            if (!session.uuid || !session.firstName || !session.accessToken) {
+            if (!req.session.uuid || !req.session.firstName || !req.session.accessToken) {
                 res.status(200).send('Not authenticated');
             }
             // await this.authService.doCheckToken(session.accessToken);
-            const decodedToken: any = await this.authService.decodeToken(session.accessToken);
-            await this.userService.doCheckIfUserIdExistInDb(decodedToken);
-            res.status(200).json(decodedToken.id);
+            const user = await this.userService.doGetUserOfUuid(req.session.uuid);
+            await this.userService.doCheckIfUserIdExistInDb(user.id);
+            res.status(200).json(user.id);
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }
