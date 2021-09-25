@@ -75,19 +75,6 @@ export class AuthService {
     }
 
     /**
-     * decode a token to get the payload
-     * @param token string
-     * @returns
-     */
-    public decodeToken(token: string): any {
-        const decoded: any = jwt.decode(token);
-        if (!decoded) {
-            throw new HttpError('JWT decode went wrong', 400);
-        }
-        return decoded;
-    }
-
-    /**
      * generates a new valid access token
      * @returns
      */
