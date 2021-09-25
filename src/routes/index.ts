@@ -22,10 +22,12 @@ router.get('/', statusController.status);
  */
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-router.post('/logout', authController.logout);
+router.get('/logout/:userId', authController.logout);
 router.get('/checkToken', authController.checkToken);
 router.post('/refreshToken', authController.refreshToken);
 router.post('/isAdmin', authController.checkIsAdmin);
+
+router.get('/isAuthenticated', authController.checkIsAuthenticated);
 
 /**
  * User Routes
@@ -33,6 +35,6 @@ router.post('/isAdmin', authController.checkIsAdmin);
 router.put('/saveRefreshToken', userController.saveRefreshToken);
 router.post('/saveAddress', userController.saveAddress);
 router.get('/addresses/:userId', userController.doGetAddressListOfUserId);
-router.get('/userId', userController.getIdOfToken);
+router.get('/userId', userController.getId);
 
 module.exports = router;

@@ -58,6 +58,7 @@ export class AuthService {
         const refreshToken: string = jwt.sign(tokenPayload, AuthService.getRefreshTokenSecret());
 
         try {
+            await this.userService.doSaveAccessToken(foundUser.email, accessToken);
             await this.userService.doSaveRefreshToken(foundUser.email, refreshToken);
         } catch (err) {
             throw new HttpError('Could not save refresh token', 500);
@@ -138,10 +139,10 @@ export class AuthService {
         });
     }
 
-    public async doLogout(email: string): Promise<any> {
+    public async doLogout(id: number): Promise<any> {
         return User.update(
-            { refreshToken: null },
-            {where: { email } })
+            { accessToken: null, refreshToken: null },
+            {where: { id } })
             .catch((err) => {
                 throw new HttpError('User could not be Logged Out', 500);
             });

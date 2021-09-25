@@ -10,6 +10,7 @@ import { UserService } from '../service/user.service';
 import {IUser} from '../interfaces/IUser';
 import {nodeEnv, oneYearInMs} from '../configs/app.conf';
 import {IUserCookie} from '../interfaces/IUserCookie';
+import {Session, SessionData} from 'express-session';
 // import * as uuid from 'uuid';
 config(); // load data from .env
 
@@ -134,10 +135,10 @@ export class AuthController {
      * @param next
      */
     logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const email: string = req.body.email || '';
+        const userId = parseInt(req.params.userId, 10) || 0;
         try {
-            const loggedOut: any = await this.authService.doLogout(email);
-            res.clearCookie('user_session').status(200).json({ loggedOut });
+            await this.authService.doLogout(userId);
+            res.clearCookie('user_session').status(200).send('Logged out successfully');
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }
@@ -155,6 +156,27 @@ export class AuthController {
             await this.authService.doCheckToken(token);
             const isAdmin: boolean = await this.authService.doCheckIsAdmin(token);
             res.status(200).json(isAdmin);
+        } catch (e: any) {
+            res.status(e.code).send(e.message);
+        }
+    }
+
+
+    /******* new **********/
+
+    /* works */
+    checkIsAuthenticated = async (req: Request, res: Response): Promise<void> => {
+        try {
+            let isAuthenticated: boolean = false;
+            const session:  Session & Partial<SessionData> = req.session;
+
+            if (session.uuid || session.firstName || session.accessToken) {
+                const user: IUser = await this.userService.doGetUserOfUuid(session.uuid);
+                if (user.uuid === session.uuid && user.firstName === session.firstName && user.accessToken === session.accessToken) {
+                    isAuthenticated = true;
+                }
+            }
+            res.status(200).send(isAuthenticated);
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }

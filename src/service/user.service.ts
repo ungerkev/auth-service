@@ -31,6 +31,24 @@ export class UserService {
     }
 
     /**
+     * update user and save the access token to the DB
+     * @param email
+     * @param accessToken string
+     */
+    public async doSaveAccessToken(email: string, accessToken: string): Promise<void> {
+        if (!email) {
+            throw new HttpError('Missing Data', 400);
+        }
+
+        await User.update(
+            { accessToken },
+            {where: { email } })
+            .catch((err) => {
+                throw new HttpError('User could not be updated', 500);
+            });
+    }
+
+    /**
      * return the refresh token from user with specific email
      * @param email string
      * @returns
@@ -128,5 +146,22 @@ export class UserService {
         }
 
         return true;
+    }
+
+    /************************+ new ********************/
+
+    /**
+     * return user of uuid
+     * @returns
+     * @param uuid
+     */
+    public doGetUserOfUuid(uuid: string): any {
+        if (!uuid) {
+            throw new HttpError('Uuid must be provided', 400);
+        }
+
+        return User.findOne({ where: { uuid }}).catch(() => {
+            throw new HttpError('User not found', 500);
+        });
     }
 }

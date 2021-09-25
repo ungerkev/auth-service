@@ -5,6 +5,7 @@ import {
 } from 'express';
 import { UserService } from '../service/user.service';
 import { AuthService } from '../service/auth.service';
+import {Session, SessionData} from 'express-session';
 
 /**
  * User Controller
@@ -49,12 +50,15 @@ export class UserController {
         }
     }
 
-    getIdOfToken = async (req: Request, res: Response): Promise<void> => {
-        const authHeader: string | undefined = req.headers.authorization;
-        const token: string = authHeader?.split(' ')[1] || '';
+    getId = async (req: Request, res: Response): Promise<void> => {
         try {
-            await this.authService.doCheckToken(token);
-            const decodedToken: any = await this.authService.decodeToken(token);
+            const session:  Session & Partial<SessionData> = req.session;
+
+            if (!session.uuid || !session.firstName || !session.accessToken) {
+                res.status(200).send('Not authenticated');
+            }
+            await this.authService.doCheckToken(session.accessToken);
+            const decodedToken: any = await this.authService.decodeToken(session.accessToken);
             await this.userService.doCheckIfUserIdExistInDb(decodedToken);
             res.status(200).json(decodedToken.id);
         } catch (e: any) {
