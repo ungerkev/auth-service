@@ -1,8 +1,5 @@
 import { Service } from 'typedi';
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 /**
  * Status controller class

@@ -1,8 +1,5 @@
 import { Service } from 'typedi';
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import { UserService } from '../service/user.service';
 
 /**
@@ -47,10 +44,15 @@ export class UserController {
         }
     }
 
+    /**
+     * Get userId out of the session cookie
+     * @param req
+     * @param res
+     */
     getId = async (req: Request, res: Response): Promise<void> => {
         try {
             if (!req.session.uuid || !req.session.firstName || !req.session.accessToken) {
-                res.status(200).send('Not authenticated');
+                res.status(400).send('Not authenticated');
             }
             // await this.authService.doCheckToken(session.accessToken);
             const user = await this.userService.doGetUserOfUuid(req.session.uuid);
@@ -61,7 +63,11 @@ export class UserController {
         }
     }
 
-
+    /**
+     * Save new users address
+     * @param req
+     * @param res
+     */
     saveAddress = async (req: Request, res: Response): Promise<void> => {
         const userId: number = req.body?.address?.userId || 0;
         const firstName: string = req.body?.address?.firstName || '';
@@ -83,6 +89,11 @@ export class UserController {
         }
     }
 
+    /**
+     * Get all addresses of a user
+     * @param req
+     * @param res
+     */
     doGetAddressListOfUserId = async (req: Request, res: Response): Promise<void> => {
         const userId: number = parseInt(req.params.userId, 10) || 0;
 

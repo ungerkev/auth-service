@@ -3,8 +3,8 @@ import { config } from 'dotenv';
 import { HttpError } from '../errors/http.error';
 import { User } from '../db_models/User';
 import { Address } from '../db_models/Address';
-import {IUser} from '../interfaces/IUser';
-import {IAddress} from '../interfaces/IAddress';
+import { IUser } from '../interfaces/IUser';
+import { IAddress } from '../interfaces/IAddress';
 
 config(); // load data from .env
 
@@ -18,14 +18,14 @@ export class UserService {
      * @param refreshToken string
      */
     public async doSaveRefreshToken(email: string, refreshToken: string): Promise<void> {
-        if (!email) {
+        if (!email || !refreshToken) {
             throw new HttpError('Missing Data', 400);
         }
 
         await User.update(
-            { refreshToken },
-            {where: { email } })
-            .catch((err) => {
+             { refreshToken },
+            { where: { email },
+            }).catch((err) => {
                 throw new HttpError('User could not be updated', 500);
             });
     }
@@ -41,9 +41,9 @@ export class UserService {
         }
 
         await User.update(
-            { accessToken },
-            {where: { email } })
-            .catch((err) => {
+             { accessToken },
+            { where: { email },
+            }).catch((err) => {
                 throw new HttpError('User could not be updated', 500);
             });
     }
@@ -58,29 +58,37 @@ export class UserService {
             throw new HttpError('Missing Data', 400);
         }
 
-        return User.findOne({ where: { email }}).then((user) => {
-            if (user && user.refreshToken) {
-                return user.refreshToken;
-            }
-            return '';
-        }).catch(() => {
-            throw new HttpError('User not found', 404);
-        });
+        return User.findOne(
+            { where: { email },
+            }).then((user) => {
+                if (user && user.refreshToken) {
+                    return user.refreshToken;
+                }
+                return '';
+            }).catch(() => {
+                throw new HttpError('User not found', 404);
+            });
     }
 
+    /**
+     * Get access token from user DB
+     * @param email string
+     */
     public async doGetAccessToken(email: string): Promise<string> {
         if (!email) {
             throw new HttpError('Missing Data', 400);
         }
 
-        return User.findOne({ where: { email }}).then((user) => {
-            if (user && user.accessToken) {
-                return user.accessToken;
-            }
-            return '';
-        }).catch(() => {
-            throw new HttpError('User not found', 404);
-        });
+        return User.findOne(
+            { where: { email },
+            }).then((user) => {
+                if (user && user.accessToken) {
+                    return user.accessToken;
+                }
+                return '';
+            }).catch(() => {
+                throw new HttpError('User not found', 404);
+            });
     }
 
     /**
@@ -97,6 +105,20 @@ export class UserService {
         throw new HttpError('Email must be provided', 400);
     }
 
+    /**
+     * Save new users address in DB
+     * @param userId number
+     * @param firstName string
+     * @param lastName string
+     * @param company string
+     * @param phone string
+     * @param address1 string
+     * @param address2 string
+     * @param city string
+     * @param country string
+     * @param zipCode string
+     * @param isDefault boolean
+     */
     public async doSaveAddress(userId: number,
                                firstName: string,
                                lastName: string,
@@ -125,6 +147,10 @@ export class UserService {
         });
     }
 
+    /**
+     * Get all address of userId
+     * @param userId number
+     */
     public doGetAddressListOfUserId(userId: number): any {
         if (!userId) {
             throw new HttpError('Missing Data', 400);
@@ -140,6 +166,10 @@ export class UserService {
         });
     }
 
+    /**
+     * Get user of userId
+     * @param userId number
+     */
     public doGetUserOfId(userId: number): any {
         if (!userId) {
             throw new HttpError('Missing data', 400);
@@ -150,6 +180,10 @@ export class UserService {
         });
     }
 
+    /**
+     * Check if a user with this userId exists in the DB
+     * @param userId number
+     */
     public async doCheckIfUserIdExistInDb(userId: number): Promise<boolean> {
         if (!userId) {
             throw new HttpError('User id must be provided', 400);
@@ -163,20 +197,20 @@ export class UserService {
         return true;
     }
 
-    /************************+ new ********************/
-
     /**
      * return user of uuid
      * @returns
-     * @param uuid
+     * @param uuid string
      */
     public doGetUserOfUuid(uuid: string): any {
         if (!uuid) {
             throw new HttpError('Uuid must be provided', 400);
         }
 
-        return User.findOne({ where: { uuid }}).catch(() => {
-            throw new HttpError('User not found', 500);
-        });
+        return User.findOne(
+            { where: { uuid },
+            }).catch(() => {
+                throw new HttpError('User not found', 500);
+            });
     }
 }

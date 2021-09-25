@@ -7,10 +7,10 @@ import {
 import { AuthService } from '../service/auth.service';
 import { config } from 'dotenv';
 import { UserService } from '../service/user.service';
-import {IUser} from '../interfaces/IUser';
-import {nodeEnv, oneYearInMs} from '../configs/app.conf';
-import {IUserCookie} from '../interfaces/IUserCookie';
-import {Session, SessionData} from 'express-session';
+import { IUser } from '../interfaces/IUser';
+import { nodeEnv, oneYearInMs } from '../configs/app.conf';
+import { IUserCookie } from '../interfaces/IUserCookie';
+import { Session, SessionData } from 'express-session';
 // import * as uuid from 'uuid';
 config(); // load data from .env
 
@@ -37,10 +37,9 @@ export class AuthController {
 
         try {
             const user: IUser = await this.userService.doGetUserOfEmail(email);
-            // TODO: check if refreshToken is required after implemented cookie login
-            const token: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
+            const tokens: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
 
-            req.session.accessToken = token.accessToken;
+            req.session.accessToken = tokens.accessToken;
             req.session.firstName = user.firstName;
             req.session.uuid = user.uuid;
 
@@ -48,7 +47,7 @@ export class AuthController {
                 const cookieValue: IUserCookie = {
                     firstName: user.firstName,
                     uuid: user.uuid,
-                    accessToken: token.accessToken,
+                    accessToken: tokens.accessToken,
                 };
 
                 res.cookie('user_cookie', JSON.stringify(cookieValue), {
@@ -57,15 +56,7 @@ export class AuthController {
                     secure: (nodeEnv !== 'development'),
                 });
             }
-
-            // TODO: remove this response because of implementing httpOnly cookie authentication
-            res.status(200).send({
-                tokens: token,
-                user: {
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                },
-            });
+            res.status(200).send({ success: true });
         } catch (e: any) {
             next(e);
         }
@@ -88,8 +79,12 @@ export class AuthController {
         }
     }
 
-
-
+    /**
+     * Check if a user is authenticated
+     * @param req
+     * @param res
+     * @param next
+     */
     checkIsAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let isAuthenticated: boolean = false;
