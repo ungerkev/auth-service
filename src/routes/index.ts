@@ -20,12 +20,9 @@ router.get('/', statusController.status);
 /**
  * Auth Routes
  */
-router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/logout/:userId', authController.logout);
-router.get('/checkToken', authController.checkToken);
-router.post('/refreshToken', authController.refreshToken);
-router.post('/isAdmin', authController.checkIsAdmin);
+// router.get('/checkToken', authController.checkToken);
 
 router.get('/isAuthenticated', authController.checkIsAuthenticated);
 

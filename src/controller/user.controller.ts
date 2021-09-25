@@ -57,7 +57,7 @@ export class UserController {
             if (!session.uuid || !session.firstName || !session.accessToken) {
                 res.status(200).send('Not authenticated');
             }
-            await this.authService.doCheckToken(session.accessToken);
+            // await this.authService.doCheckToken(session.accessToken);
             const decodedToken: any = await this.authService.decodeToken(session.accessToken);
             await this.userService.doCheckIfUserIdExistInDb(decodedToken);
             res.status(200).json(decodedToken.id);

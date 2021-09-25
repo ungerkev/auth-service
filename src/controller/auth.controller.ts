@@ -11,6 +11,7 @@ import {IUser} from '../interfaces/IUser';
 import {nodeEnv, oneYearInMs} from '../configs/app.conf';
 import {IUserCookie} from '../interfaces/IUserCookie';
 import {Session, SessionData} from 'express-session';
+import * as jwt from 'jsonwebtoken';
 // import * as uuid from 'uuid';
 config(); // load data from .env
 
@@ -21,26 +22,6 @@ config(); // load data from .env
 export class AuthController {
     constructor(private authService: AuthService,
                 private userService: UserService) {}
-
-    /**
-     * register a new user
-     * @param req
-     * email: string
-     * password: string
-     * @param res
-     * @param next
-     */
-    register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const email: string = req.body.email || '';
-        const password: string = req.body.password || '';
-
-        try {
-            const newUser: IUser = await this.authService.doRegister(email, password);
-            res.status(200).json({ newUser });
-        } catch (e: any) {
-            next(e);
-        }
-    }
 
     /**
      * login a new user and sent access and refresh token to the client
@@ -68,7 +49,7 @@ export class AuthController {
                 const cookieValue: IUserCookie = {
                     firstName: user.firstName,
                     uuid: user.uuid,
-                    token, // accessToken + refreshToken
+                    accessToken: token.accessToken,
                 };
 
                 res.cookie('user_cookie', JSON.stringify(cookieValue), {
@@ -98,7 +79,7 @@ export class AuthController {
      * @param res
      * @param next
      */
-    checkToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    /* checkToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const authHeader: string | undefined = req.headers.authorization;
         const token: string = authHeader?.split(' ')[1] || '';
 
@@ -108,24 +89,7 @@ export class AuthController {
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }
-    }
-
-    /**
-     * refresh an expired token
-     * @param req
-     * refreshToken: string
-     * @param res
-     * @param next
-     */
-    refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const refreshToken: string = req.body.refreshToken;
-        try {
-            const accessToken: any = await this.authService.doRefreshToken(refreshToken);
-            res.status(200).json({ accessToken });
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    }
+    } */
 
     /**
      * Logout an user
@@ -144,36 +108,40 @@ export class AuthController {
         }
     }
 
-    /**
-     * check if user is admin
-     * @param req
-     * @param res
-     */
-    checkIsAdmin = async (req: Request, res: Response): Promise<void> => {
-        const authHeader: string | undefined = req.headers.authorization;
-        const token: string = authHeader?.split(' ')[1] || '';
-        try {
-            await this.authService.doCheckToken(token);
-            const isAdmin: boolean = await this.authService.doCheckIsAdmin(token);
-            res.status(200).json(isAdmin);
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    }
 
 
-    /******* new **********/
-
-    /* works */
-    checkIsAuthenticated = async (req: Request, res: Response): Promise<void> => {
+    checkIsAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let isAuthenticated: boolean = false;
             const session:  Session & Partial<SessionData> = req.session;
 
-            if (session.uuid || session.firstName || session.accessToken) {
+            if (session.uuid && session.firstName && session.accessToken) {
+
                 const user: IUser = await this.userService.doGetUserOfUuid(session.uuid);
+
                 if (user.uuid === session.uuid && user.firstName === session.firstName && user.accessToken === session.accessToken) {
-                    isAuthenticated = true;
+
+                    try {
+                        jwt.verify(user.accessToken, this.authService.getAccessTokenSecret());
+                        isAuthenticated = true;
+                        console.log('first access token VALID');
+                    } catch (err) {
+                        console.log('first access token INVALID');
+                        try {
+                            console.log('REFRESH first access token');
+                            jwt.verify(user.refreshToken, this.authService.getRefreshTokenSecret());
+                            const newAccessToken = this.authService.generateAccessToken();
+                            await this.userService.doSaveAccessToken('unger.kevin97@gmail.com', newAccessToken);
+                            isAuthenticated = true;
+                            req.session.accessToken = newAccessToken;
+                            console.log('SUCCESSFULL REFRESHED');
+                        } catch (error) {
+                            console.log('ERROR refresh token expired');
+                            isAuthenticated = false;
+                            await this.authService.doLogout(user.id);
+                            res.clearCookie('user_session');
+                        }
+                    }
                 }
             }
             res.status(200).send(isAuthenticated);

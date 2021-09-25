@@ -68,6 +68,21 @@ export class UserService {
         });
     }
 
+    public async doGetAccessToken(email: string): Promise<string> {
+        if (!email) {
+            throw new HttpError('Missing Data', 400);
+        }
+
+        return User.findOne({ where: { email }}).then((user) => {
+            if (user && user.accessToken) {
+                return user.accessToken;
+            }
+            return '';
+        }).catch(() => {
+            throw new HttpError('User not found', 404);
+        });
+    }
+
     /**
      * return user of email
      * @param email string
