@@ -3,10 +3,14 @@
  */
 export interface IUser {
     id: number;
+    uuid: string;
     email: string;
     firstName: string;
     lastName: string;
     isAdmin: boolean;
+    rememberMe: boolean;
+    accessToken: string;
+    refreshToken: string;
 }
 
 /**
@@ -17,10 +21,14 @@ export interface IUser {
 export function getIUser(): IUser {
     return {
         id: 0,
+        uuid: '',
         email: '',
         firstName: '',
         lastName: '',
         isAdmin: false,
+        rememberMe: false,
+        accessToken: '',
+        refreshToken: '',
     };
 }
 

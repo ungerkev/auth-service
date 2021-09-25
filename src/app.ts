@@ -4,13 +4,16 @@ import cors from 'cors';
 import * as http from 'http';
 import { config } from 'dotenv';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
+
+import {AllowedHeadersMiddleware} from './middlewares/allowedHeaders.middleware';
+import { Container } from 'typedi';
+
 
 config(); // load data from .env
-
-import { Container } from 'typedi';
+import {appPort, nodeEnv, sessionSecret} from './configs/app.conf';
 import { DatabaseLoader } from './loaders/database.loader';
-import { appPort } from './configs/app.conf';
-import {AllowedHeadersMiddleware} from './middlewares/allowedHeaders.middleware';
+
 
 /**
  * Initialization
@@ -22,15 +25,39 @@ const allowHeadersMiddleware = Container.get(AllowedHeadersMiddleware);
 const routes = require('./routes/index');
 
 /**
+ * Interface for session
+ */
+declare module 'express-session' {
+    /* tslint:disable-next-line */
+    export interface Session {
+        firstName: string;
+        uuid: string;
+        accessToken: string;
+    }
+}
+
+/**
  * Application Usages
  */
 app.use(allowHeadersMiddleware.checkHeaders); // Global middleware
 app.use(cookieParser()); // Get cookies vom request
+app.use(session({ // Use sessions
+    name: 'user_session',
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: undefined, // Destroy cookie when browser is closed
+        httpOnly: true,
+        secure: (nodeEnv !== 'development'),
+    },
+}));
 app.use(helmet()); // Restrict some headers - security
 app.use(cors({ origin: true, credentials: true })); // Cross origin resource
 app.use(express.urlencoded({ extended: true })); // To get the body
 app.use(express.json()); // Recognize incoming request as a json
 app.use('/', routes); // Use the defined routes in index.ts
+
 
 /**
  * CONNECT DB and START SERVER

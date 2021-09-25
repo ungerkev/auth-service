@@ -9,6 +9,8 @@ import { config } from 'dotenv';
 import { UserService } from '../service/user.service';
 import {IUser} from '../interfaces/IUser';
 import {nodeEnv, oneYearInMs} from '../configs/app.conf';
+import {IUserCookie} from '../interfaces/IUserCookie';
+// import * as uuid from 'uuid';
 config(); // load data from .env
 
 /**
@@ -50,20 +52,34 @@ export class AuthController {
     login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const email: string = req.body.email || '';
         const password: string = req.body.password || '';
+        const rememberMe: boolean = req.body.rememberMe || false;
 
         try {
-            const tokens: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
             const user: IUser = await this.userService.doGetUserOfEmail(email);
+            // TODO: check if refreshToken is required after implemented cookie login
+            const token: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
 
-            res.cookie('tokens', JSON.stringify(tokens), {
-                expires: new Date(Date.now() + oneYearInMs),
-                httpOnly: true,
-                secure: (nodeEnv !== 'development'),
-            });
+            req.session.accessToken = token.accessToken;
+            req.session.firstName = user.firstName;
+            req.session.uuid = user.uuid;
+
+            if (rememberMe) {
+                const cookieValue: IUserCookie = {
+                    firstName: user.firstName,
+                    uuid: user.uuid,
+                    token, // accessToken + refreshToken
+                };
+
+                res.cookie('user_cookie', JSON.stringify(cookieValue), {
+                    expires: new Date(Date.now() + oneYearInMs),
+                    httpOnly: true,
+                    secure: (nodeEnv !== 'development'),
+                });
+            }
 
             // TODO: remove this response because of implementing httpOnly cookie authentication
             res.status(200).json({
-                tokens,
+                tokens: token,
                 user: {
                     firstName: user.firstName,
                     lastName: user.lastName,
@@ -121,7 +137,7 @@ export class AuthController {
         const email: string = req.body.email || '';
         try {
             const loggedOut: any = await this.authService.doLogout(email);
-            res.status(200).json({ loggedOut });
+            res.clearCookie('user_session').status(200).json({ loggedOut });
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }

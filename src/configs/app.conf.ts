@@ -7,6 +7,7 @@ import { join } from 'path';
 export const appPort = process.env.HTTP_PORT || 3000;
 export const oneYearInMs = 31536000000;// 1 * 365 * 24 * 60 * 60 * 1000
 export const nodeEnv = process.env.NODE_ENV;
+export const sessionSecret: any = process.env.SESSION_SECRET;
 
 // DB paths
 export const modelsDir = join(parentDirFinder.sync(__dirname, 'db_models'), 'db_models');

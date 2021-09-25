@@ -4,7 +4,7 @@ import {
     Table,
     AllowNull,
     BeforeBulkUpdate,
-    BeforeCreate,
+    BeforeCreate, Unique,
 } from 'sequelize-typescript';
 import { genSaltSync, hashSync } from 'bcryptjs';
 
@@ -14,12 +14,22 @@ import { genSaltSync, hashSync } from 'bcryptjs';
 
 export class User extends Model {
     @AllowNull(false)
+    @Unique
+    @Column
+    uuid: string;
+
+    @AllowNull(false)
+    @Unique
     @Column
     email: string;
 
     @AllowNull(false)
     @Column
     password: string;
+
+    @AllowNull(true)
+    @Column
+    accessToken: string;
 
     @AllowNull(true)
     @Column
@@ -36,6 +46,10 @@ export class User extends Model {
     @AllowNull(false)
     @Column
     lastName: string;
+
+    @AllowNull(false)
+    @Column
+    rememberMe: boolean;
 
     @BeforeCreate
     @BeforeBulkUpdate
