@@ -22,8 +22,6 @@ router.get('/', statusController.status);
  */
 router.post('/login', authController.login);
 router.get('/logout/:userId', authController.logout);
-// router.get('/checkToken', authController.checkToken);
-
 router.get('/isAuthenticated', authController.checkIsAuthenticated);
 
 /**

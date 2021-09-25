@@ -72,25 +72,6 @@ export class AuthController {
     }
 
     /**
-     * check if a token is valid
-     * @param req
-     * authorization: header
-     * @param res
-     * @param next
-     */
-    /* checkToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const authHeader: string | undefined = req.headers.authorization;
-        const token: string = authHeader?.split(' ')[1] || '';
-
-        try {
-            await this.authService.doCheckToken(token);
-            res.status(200).json({ success: true });
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    } */
-
-    /**
      * Logout an user
      * @param req
      * email: string

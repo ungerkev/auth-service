@@ -47,24 +47,6 @@ export class AuthService {
         };
     }
 
-    /**
-     * check if a token is valid
-     * @param token string
-     * @returns
-     */
-    /* public doCheckToken(token: string): any {
-        if (!token) {
-            throw new HttpError('Access Token is not set', 401);
-        }
-
-        return jwt.verify(token, this.getAccessTokenSecret(), (err, user) => {
-            if (err) {
-                throw new HttpError('Token expired', 401);
-            }
-            return user;
-        });
-    } */
-
     public async doLogout(id: number): Promise<any> {
         return User.update(
             { accessToken: null, refreshToken: null },
