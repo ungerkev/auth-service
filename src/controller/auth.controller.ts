@@ -90,7 +90,7 @@ export class AuthController {
             if (req.session.uuid && req.session.firstName && req.session.accessToken) {
                 const user: IUser = await this.userService.doGetUserOfUuid(req.session.uuid);
 
-                if (user.uuid === req.session.uuid && user.firstName === req.session.firstName && user.accessToken === req.session.accessToken) {
+                if (user && user.uuid === req.session.uuid && user.firstName === req.session.firstName && user.accessToken === req.session.accessToken) {
                     try {
                         this.authService.verifyAccessToken(user.accessToken);
                         isAuthenticated = true;
@@ -108,7 +108,9 @@ export class AuthController {
                             await this.authService.doLogout(user.id);
                         }
                     }
-                }
+                } // TODO: else if (user && user.accessToken !== req.session.accessToken) {
+                    // token theft!!!! alert user
+                // }
             }
 
             if (!isAuthenticated) {
