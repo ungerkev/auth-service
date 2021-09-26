@@ -135,7 +135,7 @@ export class UserService {
             throw new HttpError('Missing Data', 400);
         }
 
-        const addresses: { row: IAddress[], count: number} = await this.doGetAddressListOfUserId(userId);
+        const addresses: { rows: IAddress[], count: number} = await this.doGetAddressListOfUserId(userId);
         if (addresses?.count > 3) {
             throw new HttpError('Maximal 4 addresses can be saved', 500);
         }
@@ -151,7 +151,7 @@ export class UserService {
      * Get all address of userId
      * @param userId number
      */
-    public doGetAddressListOfUserId(userId: number): any {
+    public async doGetAddressListOfUserId(userId: number): Promise<{ rows: IAddress[], count: number }> {
         if (!userId) {
             throw new HttpError('Missing Data', 400);
         }
@@ -161,9 +161,21 @@ export class UserService {
             throw new HttpError('No user found', 500);
         }
 
-        return Address.findAndCountAll({ where: { userId }}).catch(() => {
+        const addresses: { rows: IAddress[], count: number } = await Address.findAndCountAll({where: {userId}}).catch(() => {
             throw new HttpError('Could not fetch addresses', 500);
         });
+
+        const defaultAddress: IAddress | undefined = addresses.rows.find((address: IAddress) => address.isDefault);
+
+        if (defaultAddress) {
+            const index = addresses.rows.indexOf(defaultAddress);
+            if (index > -1) {
+                addresses.rows.splice(index, 1);
+                addresses.rows.unshift(defaultAddress);
+            }
+        }
+
+        return addresses;
     }
 
     /**
