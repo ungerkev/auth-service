@@ -142,12 +142,28 @@ export class UserService {
 
         if (addresses?.count === 0) {
             isDefault = true;
+        } else {
+            if (isDefault) {
+                await this.setDefaultAddressToFalse(userId);
+            }
         }
 
         await Address.create({
             userId, firstName, lastName, company, phone, address1, address2, city, country, zipCode, isDefault,
         }).catch(() => {
             throw new HttpError('Address could not be saved', 500);
+        });
+    }
+
+    public async setDefaultAddressToFalse(userId: number): Promise<void> {
+        await Address.update(
+             { isDefault: false },
+            { where: {
+                        userId,
+                        isDefault: true,
+                        },
+            }).catch((err) => {
+            throw new HttpError('Could not set default address to false', 500);
         });
     }
 

@@ -79,7 +79,7 @@ export class UserController {
         const city: string = req.body?.address?.city || '';
         const country: string = req.body?.address?.country || '';
         const zipCode: string = req.body?.address?.zipCode || '';
-        const isDefault: boolean = req.body?.address?.default || false;
+        const isDefault: boolean = req.body?.address?.isDefault || false;
 
         try {
             await this.userService.doSaveAddress(userId, firstName, lastName, company, phone, address1, address2, city, country, zipCode, isDefault);
