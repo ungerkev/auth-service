@@ -47,10 +47,6 @@ export class User extends Model {
     @Column
     lastName: string;
 
-    @AllowNull(false)
-    @Column
-    rememberMe: boolean;
-
     @BeforeCreate
     @BeforeBulkUpdate
     static hashPassword(instance: any): void {

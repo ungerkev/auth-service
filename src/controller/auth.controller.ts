@@ -8,9 +8,6 @@ import { AuthService } from '../service/auth.service';
 import { config } from 'dotenv';
 import { UserService } from '../service/user.service';
 import { IUser } from '../interfaces/IUser';
-import { nodeEnv, oneYearInMs } from '../configs/app.conf';
-import { IUserCookie } from '../interfaces/IUserCookie';
-import { Session, SessionData } from 'express-session';
 // import * as uuid from 'uuid';
 config(); // load data from .env
 
@@ -33,7 +30,7 @@ export class AuthController {
     login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const email: string = req.body.email || '';
         const password: string = req.body.password || '';
-        const rememberMe: boolean = req.body.rememberMe || false;
+        // const rememberMe: boolean = req.body.rememberMe || false;
 
         try {
             const user: IUser = await this.userService.doGetUserOfEmail(email);
@@ -43,7 +40,7 @@ export class AuthController {
             req.session.firstName = user.firstName;
             req.session.uuid = user.uuid;
 
-            if (rememberMe) {
+            /* if (rememberMe) {
                 const cookieValue: IUserCookie = {
                     firstName: user.firstName,
                     uuid: user.uuid,
@@ -55,7 +52,7 @@ export class AuthController {
                     httpOnly: true,
                     secure: (nodeEnv !== 'development'),
                 });
-            }
+            } */
             res.status(200).send({ success: true });
         } catch (e: any) {
             next(e);
@@ -88,12 +85,12 @@ export class AuthController {
     checkIsAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let isAuthenticated: boolean = false;
-            const session:  Session & Partial<SessionData> = req.session;
 
-            if (session.uuid && session.firstName && session.accessToken) {
-                const user: IUser = await this.userService.doGetUserOfUuid(session.uuid);
+            // normal session login
+            if (req.session.uuid && req.session.firstName && req.session.accessToken) {
+                const user: IUser = await this.userService.doGetUserOfUuid(req.session.uuid);
 
-                if (user.uuid === session.uuid && user.firstName === session.firstName && user.accessToken === session.accessToken) {
+                if (user.uuid === req.session.uuid && user.firstName === req.session.firstName && user.accessToken === req.session.accessToken) {
                     try {
                         this.authService.verifyAccessToken(user.accessToken);
                         isAuthenticated = true;

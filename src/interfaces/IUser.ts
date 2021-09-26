@@ -8,7 +8,6 @@ export interface IUser {
     firstName: string;
     lastName: string;
     isAdmin: boolean;
-    rememberMe: boolean;
     accessToken: string;
     refreshToken: string;
 }
@@ -26,7 +25,6 @@ export function getIUser(): IUser {
         firstName: '',
         lastName: '',
         isAdmin: false,
-        rememberMe: false,
         accessToken: '',
         refreshToken: '',
     };
