@@ -140,6 +140,10 @@ export class UserService {
             throw new HttpError('Maximal 4 addresses can be saved', 500);
         }
 
+        if (addresses?.count === 0) {
+            isDefault = true;
+        }
+
         await Address.create({
             userId, firstName, lastName, company, phone, address1, address2, city, country, zipCode, isDefault,
         }).catch(() => {
