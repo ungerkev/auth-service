@@ -104,4 +104,15 @@ export class UserController {
             res.status(e.code).send(e.message);
         }
     }
+
+    deleteAddressById = async (req: Request, res: Response): Promise<void> => {
+        const id: number = parseInt(req.params.id, 10) || 0;
+
+        try {
+            await this.userService.doDeleteAddressById(id);
+            res.status(200).json({ success: true });
+        } catch (e: any) {
+            res.status(e.code).send(e.message);
+        }
+    }
 }

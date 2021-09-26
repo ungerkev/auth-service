@@ -245,4 +245,46 @@ export class UserService {
                 throw new HttpError('User not found', 500);
             });
     }
+
+    /**
+     * delete address from DB
+     * @param id number
+     */
+    public async doDeleteAddressById(id: number): Promise<void> {
+        const address: IAddress | null  = await Address.findOne({ where: { id } }).catch(() => {
+            throw new HttpError('Could not find address', 500);
+        });
+
+        if (!address) {
+            return;
+        }
+
+        await Address.destroy({ where: { id } }).then(async () => {
+            await this.updateDefaultAddressOnDelete(address.userId);
+        }).catch((error) => {
+            throw new HttpError('Address could not be deleted', 500);
+        });
+    }
+
+    /**
+     * Set isDefault of an random address to true if the default address is deleted
+     * @param userId
+     */
+    private async updateDefaultAddressOnDelete(userId: number) {
+        const addresses: { rows: Address[]; count: number } = await Address.findAndCountAll({where: {userId}}).catch(() => {
+            throw new HttpError('Could not fetch addresses', 500);
+        });
+
+        if (!addresses || addresses.count === 0) {
+            return;
+        }
+
+        await Address.update(
+            {isDefault: true},
+            {
+                where: {id: addresses.rows[0].id},
+            }).catch((err) => {
+            throw new HttpError('Could not update default address', 500);
+        });
+    }
 }

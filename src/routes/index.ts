@@ -31,5 +31,6 @@ router.put('/saveRefreshToken', userController.saveRefreshToken);
 router.post('/saveAddress', userController.saveAddress);
 router.get('/addresses/:userId', userController.doGetAddressListOfUserId);
 router.get('/userId', userController.getId);
+router.delete('/deleteAddress/:id', userController.deleteAddressById);
 
 module.exports = router;

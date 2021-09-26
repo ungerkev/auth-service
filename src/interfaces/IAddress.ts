@@ -2,6 +2,7 @@
  * IAddress
  */
 export interface IAddress {
+    id?: number;
     userId: number;
     firstName: string;
     lastName: string;
@@ -22,6 +23,7 @@ export interface IAddress {
 // tslint:disable-next-line:only-arrow-functions
 export function getIAddress(): IAddress {
     return {
+        id: 0,
         userId: 0,
         firstName: '',
         lastName: '',
