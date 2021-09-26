@@ -106,10 +106,13 @@ export class AuthController {
                             // Final error -> refresh token expired
                             isAuthenticated = false;
                             await this.authService.doLogout(user.id);
-                            res.clearCookie('user_session');
                         }
                     }
                 }
+            }
+
+            if (!isAuthenticated) {
+                res.clearCookie('user_session');
             }
             res.status(200).send(isAuthenticated);
         } catch (e: any) {
