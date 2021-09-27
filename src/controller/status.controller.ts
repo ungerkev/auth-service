@@ -9,9 +9,9 @@ export class StatusController {
     constructor() {}
 
     status = (req: Request, res: Response): void => {
-        const date = new Date();
+        const date: Date = new Date();
 
-        const data = {
+        const data: any = {
             program: 'Shop authservice',
             version: '1.0.0',
             contact: 'unger.kevin97@gmail.com',

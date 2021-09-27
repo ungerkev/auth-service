@@ -20,7 +20,7 @@ export class AuthService {
      * @param password string
      * @returns
      */
-    public async doLogin(email: string, password: string): Promise<{accessToken: string, refreshToken: string}> {
+    public async login(email: string, password: string): Promise<{accessToken: string, refreshToken: string}> {
         if (!email || !password) {
             throw new Error('Missing Data');
         }
@@ -29,10 +29,10 @@ export class AuthService {
         const refreshToken: string = this.generateRefreshToken();
 
         try {
-            const foundUser = await this.userService.doGetUserOfEmail(email);
+            const foundUser = await this.userService.getUserOfEmail(email);
             await this.comparePasswords(password, foundUser.password);
-            await this.userService.doSaveAccessToken(foundUser.email, accessToken);
-            await this.userService.doSaveRefreshToken(foundUser.email, refreshToken);
+            await this.userService.saveAccessToken(foundUser.email, accessToken);
+            await this.userService.saveRefreshToken(foundUser.email, refreshToken);
         } catch (err) {
             throw new HttpError('Could not login', 500);
         }
@@ -47,7 +47,7 @@ export class AuthService {
      * Set accessToken and refreshToken in User DB to null
      * @param id
      */
-    public async doLogout(id: number): Promise<any> {
+    public async logout(id: number): Promise<any> {
         return User.update(
              { accessToken: null, refreshToken: null },
             { where: { id },

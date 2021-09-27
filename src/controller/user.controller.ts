@@ -16,12 +16,12 @@ export class UserController {
      * refreshToken: string
      * @param res
      */
-    saveRefreshToken = async (req: Request, res: Response): Promise<void> => {
+    saveRefreshTokenController = async (req: Request, res: Response): Promise<void> => {
         const email: string = req.body.email || '';
         const refreshToken: string = req.body.refreshToken || '';
 
         try {
-            await this.userService.doSaveRefreshToken(email, refreshToken);
+            await this.userService.saveRefreshToken(email, refreshToken);
             res.status(200).json({ success: true });
         } catch (e: any) {
             res.status(e.code).send(e.message);
@@ -37,7 +37,7 @@ export class UserController {
     getRefreshToken = async (req: Request, res: Response): Promise<void> => {
         const email: string = req.body.email || '';
         try {
-            await this.userService.doGetRefreshToken(email);
+            await this.userService.getRefreshToken(email);
             res.status(200).json({ success: true });
         } catch (e: any) {
             res.status(e.code).send(e.message);
@@ -49,68 +49,15 @@ export class UserController {
      * @param req
      * @param res
      */
-    getId = async (req: Request, res: Response): Promise<void> => {
+    getIdController = async (req: Request, res: Response): Promise<void> => {
         try {
             if (!req.session.uuid || !req.session.firstName || !req.session.accessToken) {
                 res.status(400).send('Not authenticated');
             }
             // await this.authService.doCheckToken(session.accessToken);
-            const user = await this.userService.doGetUserOfUuid(req.session.uuid);
-            await this.userService.doCheckIfUserIdExistInDb(user.id);
+            const user = await this.userService.getUserOfUuid(req.session.uuid);
+            await this.userService.doesUserExistInDb(user.id);
             res.status(200).json(user.id);
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    }
-
-    /**
-     * Save new users address
-     * @param req
-     * @param res
-     */
-    saveAddress = async (req: Request, res: Response): Promise<void> => {
-        const userId: number = req.body?.address?.userId || 0;
-        const firstName: string = req.body?.address?.firstName || '';
-        const lastName: string = req.body?.address?.lastName || '';
-        const company: string = req.body?.address?.company || '';
-        const phone: string = req.body?.address?.phone || '';
-        const address1: string = req.body?.address?.address1 || '';
-        const address2: string = req.body?.address?.address2 || '';
-        const city: string = req.body?.address?.city || '';
-        const country: string = req.body?.address?.country || '';
-        const zipCode: string = req.body?.address?.zipCode || '';
-        const isDefault: boolean = req.body?.address?.isDefault || false;
-
-        try {
-            await this.userService.doSaveAddress(userId, firstName, lastName, company, phone, address1, address2, city, country, zipCode, isDefault);
-            res.status(200).json({ success: true });
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    }
-
-    /**
-     * Get all addresses of a user
-     * @param req
-     * @param res
-     */
-    doGetAddressListOfUserId = async (req: Request, res: Response): Promise<void> => {
-        const userId: number = parseInt(req.params.userId, 10) || 0;
-
-        try {
-            const addresses = await this.userService.doGetAddressListOfUserId(userId);
-            res.status(200).json({ addresses });
-        } catch (e: any) {
-            res.status(e.code).send(e.message);
-        }
-    }
-
-    deleteAddressById = async (req: Request, res: Response): Promise<void> => {
-        const id: number = parseInt(req.params.id, 10) || 0;
-
-        try {
-            await this.userService.doDeleteAddressById(id);
-            res.status(200).json({ success: true });
         } catch (e: any) {
             res.status(e.code).send(e.message);
         }

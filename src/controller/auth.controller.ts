@@ -27,14 +27,14 @@ export class AuthController {
      * @param res
      * @param next
      */
-    login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    loginController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const email: string = req.body.email || '';
         const password: string = req.body.password || '';
         // const rememberMe: boolean = req.body.rememberMe || false;
 
         try {
-            const user: IUser = await this.userService.doGetUserOfEmail(email);
-            const tokens: { accessToken: string, refreshToken: string } = await this.authService.doLogin(email, password);
+            const user: IUser = await this.userService.getUserOfEmail(email);
+            const tokens: { accessToken: string, refreshToken: string } = await this.authService.login(email, password);
 
             req.session.accessToken = tokens.accessToken;
             req.session.firstName = user.firstName;
@@ -66,10 +66,10 @@ export class AuthController {
      * @param res
      * @param next
      */
-    logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    logoutController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const userId = parseInt(req.params.userId, 10) || 0;
         try {
-            await this.authService.doLogout(userId);
+            await this.authService.logout(userId);
             res.clearCookie('user_session').status(200).send('Logged out successfully');
         } catch (e: any) {
             res.status(e.code).send(e.message);
@@ -82,13 +82,13 @@ export class AuthController {
      * @param res
      * @param next
      */
-    checkIsAuthenticated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    isAuthenticatedController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let isAuthenticated: boolean = false;
 
             // normal session login
             if (req.session.uuid && req.session.firstName && req.session.accessToken) {
-                const user: IUser = await this.userService.doGetUserOfUuid(req.session.uuid);
+                const user: IUser = await this.userService.getUserOfUuid(req.session.uuid);
 
                 if (user && user.uuid === req.session.uuid && user.firstName === req.session.firstName && user.accessToken === req.session.accessToken) {
                     try {
@@ -99,13 +99,13 @@ export class AuthController {
                             // Handle refresh token
                             this.authService.verifyRefreshToken(user.refreshToken);
                             const newAccessToken = this.authService.generateAccessToken();
-                            await this.userService.doSaveAccessToken(user.email, newAccessToken);
+                            await this.userService.saveAccessToken(user.email, newAccessToken);
                             req.session.accessToken = newAccessToken;
                             isAuthenticated = true;
                         } catch (error: any) {
                             // Final error -> refresh token expired
                             isAuthenticated = false;
-                            await this.authService.doLogout(user.id);
+                            await this.authService.logout(user.id);
                         }
                     }
                 } // TODO: else if (user && user.accessToken !== req.session.accessToken) {
