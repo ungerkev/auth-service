@@ -1,9 +1,9 @@
-import { Service } from 'typedi';
-import { config } from 'dotenv';
-import { HttpError } from '../errors/http.error';
-import { Address } from '../db_models/Address';
-import { IUser } from '../interfaces/IUser';
-import { IAddress } from '../interfaces/IAddress';
+import {Service} from 'typedi';
+import {config} from 'dotenv';
+import {HttpError} from '../errors/http.error';
+import {Address} from '../db_models/Address';
+import {IUser} from '../interfaces/IUser';
+import {IAddress} from '../interfaces/IAddress';
 import {UserService} from './user.service';
 
 config(); // load data from .env
@@ -140,6 +140,70 @@ export class AddressService {
                 where: {id: addresses.rows[0].id},
             }).catch((err) => {
             throw new HttpError('Could not update default address', 500);
+        });
+    }
+
+
+    /**
+     * Update an address
+     * @param id number
+     * @param userId number
+     * @param firstName string
+     * @param lastName string
+     * @param company string
+     * @param phone string
+     * @param address1 string
+     * @param address2 string
+     * @param city string
+     * @param country string
+     * @param zipCode string
+     * @param isDefault string
+     */
+    public async updateAddress(id: number,
+                               userId: number,
+                               firstName: string,
+                               lastName: string,
+                               company: string,
+                               phone: string,
+                               address1: string,
+                               address2: string,
+                               city: string,
+                               country: string,
+                               zipCode: string,
+                               isDefault: boolean): Promise<void> {
+
+        if (!id || !userId) {
+            throw new HttpError('Missing Data', 400);
+        }
+
+        const addresses: { rows: IAddress[], count: number} = await this.getAddressListOfUserId(userId);
+
+        if (addresses?.count === 1) {
+            isDefault = true;
+        } else {
+            if (isDefault) {
+                // await this.updateDefaultAddressOnDelete(userId);
+                await this.setDefaultAddressToFalse(userId);
+            }
+        }
+
+        await Address.update({ firstName, lastName, company, phone, address1, address2, city, country, zipCode, isDefault},
+        {where: {id }}).catch(() => {
+            throw new HttpError('Address could not be saved', 500);
+        });
+    }
+
+    /**
+     * Get an address by its id
+     * @param id number
+     */
+    public async getAddressOfId(id: number): Promise<IAddress | null> {
+        if (!id) {
+            throw new HttpError('Missing Data', 400);
+        }
+
+        return Address.findOne({where: {id}}).catch(() => {
+            throw new HttpError('Could not get address', 500);
         });
     }
 }

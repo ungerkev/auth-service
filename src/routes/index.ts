@@ -38,5 +38,7 @@ router.get('/userId', userController.getIdController);
 router.post('/saveAddress', addressController.saveAddressController);
 router.get('/addresses/:userId', addressController.getAddressListOfUserIdController);
 router.delete('/deleteAddress/:id', addressController.deleteAddressByIdController);
+router.patch('/updateAddress/:id', addressController.updateAddressController);
+router.get('/address/:id', addressController.getAddressOfIdController);
 
 module.exports = router;
