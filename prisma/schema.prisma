@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/infrastructure/prisma/generated"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  password         String?
+  passwordRequired Boolean   @default(false)
+  lastLogin        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  activeTenantId   String?
+
+  memberships    Membership[]
+  sessions       Session[]
+  oAuthProviders OAuthProvider[]
+  OtpToken       OtpToken[]
+
+  @@index([email])
+  @@map("user")
+}
+
+model Tenant {
+  id                         String       @id @default(uuid())
+  name                       String
+  createdAt                  DateTime     @default(now())
+  updatedAt                  DateTime     @updatedAt
+  memberships                Membership[]
+  invites                    Invite[]
+  stripeCustomerId           String?
+  stripeSubscriptionId       String?
+  stripeSubscriptionCancelAt DateTime?
+
+  @@map("tenant")
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  tenantId  String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId]) // A user can be in a team only once
+  @@index([tenantId])
+  @@index([userId])
+  @@map("membership")
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String
+  tenantId  String
+  role      Role     @default(MEMBER)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([email])
+  @@map("invite")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("session")
+}
+
+model OAuthProvider {
+  id             String    @id @default(uuid())
+  provider       String
+  providerUserId String?
+  accessToken    String?   @db.Text
+  expiresAt      DateTime? // AccessToken expiry
+  refreshToken   String?   @db.Text
+  avatarUrl      String?
+  userId         String
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_provider")
+}
+
+model OtpToken {
+  id        String       @id @default(uuid())
+  tokenHash String
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+  type      OtpTokenType
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId, type])
+  @@map("otp_token")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum OtpTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
